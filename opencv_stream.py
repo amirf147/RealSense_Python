@@ -3,7 +3,7 @@ from object_detection import ObjectDetect
 import math
 import numpy as np
 
-from camera_setup import RealSenseCamera
+from realsense_api import RealSenseCamera
 
 top = 100
 bottom = 100

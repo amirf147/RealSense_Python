@@ -12,7 +12,15 @@ profile = pipe.start(cfg)
 
 try:
     while True:
-                
+        # decimate = rs.decimation_filter(8)
+        # align_to = rs.stream.color
+        # align = rs.align(align_to)
+
+        # # Get frameset of color and depth
+        # frames = pipeline.wait_for_frames()
+        # decimated = decimate.process(frames).as_frameset()
+        # # Align the depth frame to color frame
+        # aligned_frames = align.process(decimated)
         frameset = pipe.wait_for_frames()
         frame = frameset.get_depth_frame()
 
@@ -28,9 +36,14 @@ try:
 
         # frame = depth_to_disparity.process(frame)
         # frame = spatial.process(frame)
-        frame = temporal.process(frame)
+        frame = temporal.process(frameset).as_frameset()
+        # frame = frame.get_depth_frame()
+        
         # frame = disparity_to_depth.process(frame)
         # frame = hole_filling.process(frame)
+        align = rs.align(rs.stream.color)
+        frame = align.process(frame)
+        frame = frame.get_depth_frame()
         colorized_depth = np.asanyarray(colorizer.colorize(frame).get_data())
 
         cv2.imshow('o', colorized_depth)
