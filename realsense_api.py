@@ -14,13 +14,26 @@ import pyrealsense2 as rs
 
 class RealSenseCamera:
 
-    def __init__(self, ros_bag = None):
+    def __init__(self, 
+                 depth_stream_width=640, depth_stream_height=480,
+                 color_stream_width=1280, color_stream_height=720,
+                 depth_stream_fps=30, color_stream_fps=30,
+                 ros_bag = None):
 
         # Used if openings stream from prerecorded ros .bag file
         # holds the path to the .bag file
         self.ros_bag = ros_bag
 
-        # Data variables that will be set with get_data()
+        # Resolution attributes
+        self.depth_stream_width = depth_stream_width
+        self.depth_stream_height = depth_stream_height
+        self.color_stream_width = color_stream_width
+        self.color_stream_height = color_stream_height
+
+        self.depth_stream_fps = depth_stream_fps
+        self.color_stream_fps = color_stream_fps
+
+        # Data attributes that will be set with get_data()
         self.frameset = None
         self.depth_frame = None
         self.color_frame = None
@@ -28,7 +41,7 @@ class RealSenseCamera:
         self.color_intrinsics = None
         self.depth_scale = None
 
-        # Holds the data frame after it has undergone filtering 
+        # Holds the frameset after it has undergone filtering 
         self.filtered_frameset = None
 
         # Aligned frame holders
@@ -36,24 +49,24 @@ class RealSenseCamera:
         self.color_frame_aligned = None
         self.infrared_frame_aligned = None
 
-        # Post Processing Filter variables with default values
+        # Post Processing Filter attributes with default values
         # https://dev.intelrealsense.com/docs/post-processing-filters
 
-        # Decimation filter variable 
+        # Decimation filter attribute 
         self.decimation_magnitude = 2
         
-        # Spatial filter variables
+        # Spatial filter attributes
         self.spatial_magnitude = 2
         self.spatial_smooth_alpha = 1
         self.spatial_smooth_delta = 20
         self.spatial_holes_fill = 1
 
-        # Temporal filter variables
+        # Temporal filter attributes
         self.temporal_smooth_alpha = 0.4
         self.temporal_smooth_delta = 20
         self.persistency_index = 8
 
-        # Holes Filling filter variable
+        # Holes Filling filter attribute
         self.hole_filling = 1
 
         # Configure and start streams
@@ -62,14 +75,19 @@ class RealSenseCamera:
         if ros_bag:
             config.enable_device_from_file(self.ros_bag)
         else:
-            config.enable_stream(rs.stream.depth, rs.format.z16, 30)
-            config.enable_stream(rs.stream.color, rs.format.bgr8, 30)
-            config.enable_stream(rs.stream.infrared, rs.format.y8, 30)
-        self.profile = self.pipeline.start(config)
+            config.enable_stream(rs.stream.depth,
+                                 self.depth_stream_width, self.depth_stream_height,
+                                 rs.format.z16, self.depth_stream_fps)
 
-        # Get depth scale
-        depth_sensor = self.profile.get_device().first_depth_sensor()
-        self.depth_scale = depth_sensor.get_depth_scale()
+            config.enable_stream(rs.stream.color,
+                                 self.color_stream_width, self.color_stream_height,
+                                 rs.format.bgr8, self.color_stream_fps)
+
+            config.enable_stream(rs.stream.infrared,
+                                 rs.format.y8,
+                                 self.depth_stream_fps)
+
+        self.profile = self.pipeline.start(config)
 
     # def get_options(self):
     def get_data(self, color_intrinsics=False):
@@ -79,14 +97,16 @@ class RealSenseCamera:
         self.color_frame = self.frameset.get_color_frame()
         self.infrared_frame = self.frameset.first(rs.stream.infrared)
         
+        # Get depth scale
+        depth_sensor = self.profile.get_device().first_depth_sensor()
+        self.depth_scale = depth_sensor.get_depth_scale()
+        
         if color_intrinsics:                
             self.color_intrinsics = self.color_frame.profile \
                                     .as_video_stream_profile() \
                                     .intrinsics
 
-    def get_aligned_frames(self, aligned_to_color=False, aligned_to_depth=False):
-
-        frameset = self.frameset
+    def get_aligned_frames(self, frameset, aligned_to_color=False, aligned_to_depth=False):
 
         if aligned_to_color:
             align_to = rs.stream.color
@@ -98,10 +118,9 @@ class RealSenseCamera:
             align = rs.align(align_to)
             frameset = align.process(frameset)
  
-        self.filtered_frameset = frameset
-        self.depth_frame_aligned = self.filtered_frameset.get_depth_frame()
-        self.color_frame_aligned = self.filtered_frameset.get_color_frame()
-        self.infrared_frame_aligned = self.filtered_frameset.first(rs.stream.infrared)
+        self.depth_frame_aligned    = frameset.get_depth_frame()
+        self.color_frame_aligned    = frameset.get_color_frame()
+        self.infrared_frame_aligned = frameset.first(rs.stream.infrared)
 
     def filter_depth_data(self,
                           enable_decimation = False,

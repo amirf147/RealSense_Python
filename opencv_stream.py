@@ -110,7 +110,7 @@ try:
         # print(size)
 
         # ret, depth_frame, color_frame, colorized_depth, color_intrin, filtered_depth_colored, filtered_depth = camera.get_frame()  
-        #nn = ObjectDetect(color_frame, colorized_depth, depth_frame, camera.depth_scale, filtered_depth_colored, filtered_depth)
+        # nn = ObjectDetect(color_frame, colorized_depth, depth_frame, camera.depth_scale, filtered_depth_colored, filtered_depth)
         #crop_img, depth_img, text, text_filt, text_location, points, confidence = nn.detect()
 
         #cv2.namedWindow('Both Streams', cv2.WINDOW_NORMAL)
