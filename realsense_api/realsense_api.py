@@ -73,6 +73,7 @@ class RealSenseCamera:
         self.pipeline = rs.pipeline()
         config = rs.config()
         if ros_bag:
+            print('ros')
             config.enable_device_from_file(self.ros_bag)
         else:
             config.enable_stream(rs.stream.depth,

@@ -3,6 +3,7 @@ import cv2
 from realsense_api import RealSenseCamera
 
 # TODO: 
+#   - Restore the object detection functionality 
 #   - Create a dictionary to hold multiple rosbag file paths that can be the 
 #     key while the value can be a camera instantiation.  This would be for
 #     when we want to view multiple rosbags at the same time.
