@@ -1,6 +1,7 @@
 from object_detection import ObjectDetect
 import cv2
 from realsense_api import RealSenseCamera
+from realsense_api.post_processing.option import OptionType
 
 # TODO: 
 #   - Create a dictionary to hold multiple rosbag file paths that can be the 
@@ -54,10 +55,15 @@ try:
         cv2.imshow(image_name, colored_depth_image)
         key = cv2.waitKey(1)
 
+
+
         # Press esc or 'q' to close the image window
         if key & 0xFF == ord('q') or key == 27:
             cv2.destroyAllWindows()
             break
 
+        if key & 0xFF == ord('d'):
+            decimation_magnitude = camera.decimation.options[OptionType.MAGNITUDE]
+            camera.decimation.increment(decimation_magnitude)
 finally:
     camera.stop()
